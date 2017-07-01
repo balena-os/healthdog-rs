@@ -20,12 +20,17 @@ fn main() {
     let mut opts = Options::new();
 
     opts.parsing_style(ParsingStyle::StopAtFirstFree)
-        .optflagopt("p", "pid", "Send watchdog events on behalf of specified pid", "PID")
+        .optflagopt(
+            "p",
+            "pid",
+            "Send watchdog events on behalf of specified pid",
+            "PID",
+        )
         .reqopt("c", "healthcheck", "Set healthcheck command", "COMMAND")
         .optflag("h", "help", "Print this help menu");
 
     let matches = match opts.parse(&args) {
-        Ok(m) => { m }
+        Ok(m) => m,
         Err(err) => {
             println!("{}\n", err);
             print_usage(&opts);
@@ -40,10 +45,12 @@ fn main() {
 
     let health_cmd = match matches.opt_str("healthcheck") {
         Some(s) => s,
-        None => process::exit(1)
+        None => process::exit(1),
     };
 
-    let interval = match env::var("WATCHDOG_USEC").ok().and_then(|val| val.parse::<u64>().ok()) {
+    let interval = match env::var("WATCHDOG_USEC").ok().and_then(
+        |val| val.parse::<u64>().ok(),
+    ) {
         Some(usec) => time::Duration::from_secs(usec / 2 / 1_000_0000),
         None => {
             println!("Invalid value for WATCHDOG_USEC");
@@ -67,7 +74,7 @@ fn main() {
                 thread::sleep(interval);
 
                 match process::Command::new(&health_cmd).status() {
-                    Ok(status) =>  {
+                    Ok(status) => {
                         if status.success() {
                             let mut message = HashMap::new();
                             message.insert("WATCHDOG", "1");
@@ -80,27 +87,34 @@ fn main() {
                                 }
                             };
                         }
-                    },
+                    }
                     Err(err) => {
                         println!("{}\n", err);
                         process::exit(1);
-                    } 
+                    }
                 }
             }
-        },
+        }
         None => {
             let pid = unsafe { libc::getpid() };
             println!("[{}] Spawning program and healthcheck", pid);
 
             // first we start the helper child process that will run the healthcheck
             process::Command::new("/proc/self/exe")
-                .args(&["--healthcheck", matches.opt_str("healthcheck").unwrap().as_str()])
+                .args(
+                    &[
+                        "--healthcheck",
+                        matches.opt_str("healthcheck").unwrap().as_str(),
+                    ],
+                )
                 .args(&["--pid", pid.to_string().as_str()])
                 .spawn()
                 .expect("failed to execute child");
 
             // Then we execve to the requested program
-            let err = exec::Command::new(&matches.free[0]).args(&matches.free[1..]).exec();
+            let err = exec::Command::new(&matches.free[0])
+                .args(&matches.free[1..])
+                .exec();
             println!("Error: {}", err);
             process::exit(1);
         }
