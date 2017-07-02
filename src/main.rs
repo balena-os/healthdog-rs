@@ -67,7 +67,7 @@ fn main() {
             };
 
             loop {
-                if let Err(_) = kill(pid, None) {
+                if kill(pid, None).is_err() {
                     println!("Parent process exited");
                     process::exit(1);
                 }
