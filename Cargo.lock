@@ -1,5 +1,5 @@
 [root]
-name = "healthdog-rs"
+name = "healthdog"
 version = "0.1.0"
 dependencies = [
  "exec 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",

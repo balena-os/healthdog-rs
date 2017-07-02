@@ -1,5 +1,5 @@
 [package]
-name = "healthdog-rs"
+name = "healthdog"
 version = "0.1.0"
 authors = ["Petros Angelatos <petrosagg@gmail.com>"]
 
