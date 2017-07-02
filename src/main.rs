@@ -1,13 +1,15 @@
-extern crate libc;
 extern crate exec;
 extern crate getopts;
+extern crate libc;
+extern crate nix;
 extern crate systemd;
 
-use std::collections::HashMap;
 use getopts::{Options, ParsingStyle};
-use std::{env, process, thread, time};
 use libc::pid_t;
-
+use nix::sys::signal::kill;
+use nix::unistd::getpid;
+use std::collections::HashMap;
+use std::{env, process, thread, time};
 use systemd::daemon;
 
 fn print_usage(opts: &Options) {
@@ -20,12 +22,7 @@ fn main() {
     let mut opts = Options::new();
 
     opts.parsing_style(ParsingStyle::StopAtFirstFree)
-        .optflagopt(
-            "p",
-            "pid",
-            "Send watchdog events on behalf of specified pid",
-            "PID",
-        )
+        .optflagopt("p", "pid", "pid to send watchdog events for", "PID")
         .reqopt("c", "healthcheck", "Set healthcheck command", "COMMAND")
         .optflag("h", "help", "Print this help menu");
 
@@ -51,7 +48,7 @@ fn main() {
     let interval = match env::var("WATCHDOG_USEC").ok().and_then(
         |val| val.parse::<u64>().ok(),
     ) {
-        Some(usec) => time::Duration::from_secs(usec / 2 / 1_000_0000),
+        Some(usec) => time::Duration::from_secs(usec / 2 / 1_000_000),
         None => {
             println!("Invalid value for WATCHDOG_USEC");
             process::exit(1);
@@ -60,7 +57,6 @@ fn main() {
 
     match matches.opt_str("pid") {
         Some(pid) => {
-            println!("Parsing target pid: {}", pid);
             let pid = match pid.parse::<pid_t>() {
                 Ok(pid) => pid,
                 Err(err) => {
@@ -71,7 +67,13 @@ fn main() {
             };
 
             loop {
-                thread::sleep(interval);
+                match kill(pid, None) {
+                    Ok(_) => {}
+                    Err(_) => {
+                        println!("Parent process exited");
+                        process::exit(1);
+                    }
+                }
 
                 match process::Command::new(&health_cmd).status() {
                     Ok(status) => {
@@ -80,43 +82,50 @@ fn main() {
                             message.insert("WATCHDOG", "1");
 
                             match daemon::pid_notify(pid, false, message) {
-                                Ok(_) => println!("Success!"),
+                                Ok(_) => {}
                                 Err(err) => {
-                                    println!("{}\n", err);
+                                    println!("{}", err);
                                     process::exit(1);
                                 }
                             };
                         }
                     }
                     Err(err) => {
-                        println!("{}\n", err);
+                        println!("{}", err);
                         process::exit(1);
                     }
                 }
+
+                thread::sleep(interval);
             }
         }
         None => {
-            let pid = unsafe { libc::getpid() };
-            println!("[{}] Spawning program and healthcheck", pid);
+            let pid = getpid();
 
             // first we start the helper child process that will run the healthcheck
-            process::Command::new("/proc/self/exe")
-                .args(
-                    &[
-                        "--healthcheck",
-                        matches.opt_str("healthcheck").unwrap().as_str(),
-                    ],
-                )
+            let helper = process::Command::new("/proc/self/exe")
+                .args(&["--healthcheck", &health_cmd])
                 .args(&["--pid", pid.to_string().as_str()])
-                .spawn()
-                .expect("failed to execute child");
+                .spawn();
 
-            // Then we execve to the requested program
-            let err = exec::Command::new(&matches.free[0])
-                .args(&matches.free[1..])
-                .exec();
-            println!("Error: {}", err);
-            process::exit(1);
+            match helper {
+                Ok(mut helper) => {
+                    // Then we execve to the requested program
+                    let err = exec::Command::new(&matches.free[0])
+                        .args(&matches.free[1..])
+                        .exec();
+
+                    // We only reach this point if execve failed
+                    println!("Error: {}", err);
+
+                    helper.kill().unwrap_or(());
+                    process::exit(1);
+                }
+                Err(err) => {
+                    println!("Error: {}", err);
+                    process::exit(1);
+                }
+            }
         }
     }
 }
