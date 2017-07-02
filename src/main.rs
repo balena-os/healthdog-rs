@@ -67,12 +67,9 @@ fn main() {
             };
 
             loop {
-                match kill(pid, None) {
-                    Ok(_) => {}
-                    Err(_) => {
-                        println!("Parent process exited");
-                        process::exit(1);
-                    }
+                if let Err(_) = kill(pid, None) {
+                    println!("Parent process exited");
+                    process::exit(1);
                 }
 
                 match process::Command::new(&health_cmd).status() {
@@ -81,12 +78,9 @@ fn main() {
                             let mut message = HashMap::new();
                             message.insert("WATCHDOG", "1");
 
-                            match daemon::pid_notify(pid, false, message) {
-                                Ok(_) => {}
-                                Err(err) => {
-                                    println!("{}", err);
-                                    process::exit(1);
-                                }
+                            if let Err(err) = daemon::pid_notify(pid, false, message) {
+                                println!("{}", err);
+                                process::exit(1);
                             };
                         }
                     }
