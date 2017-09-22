@@ -5,7 +5,6 @@ authors = ["Petros Angelatos <petrosagg@gmail.com>"]
 description = "Helper program that connects external periodic heathchecks with systemd's watchdog support"
 repository = "https://github.com/resin-os/healthdog-rs.git"
 license = "Apache-2.0"
-license_file = "LICENSE"
 
 [dependencies]
 libc = "0.2"
@@ -16,4 +15,3 @@ nix = "0.8.0"
 
 [profile.release]
 lto = true
-panic = 'abort'
