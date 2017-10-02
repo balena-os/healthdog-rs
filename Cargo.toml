@@ -13,5 +13,3 @@ getopts = "0.2.4"
 exec = "0.3.1"
 nix = "0.8.0"
 
-[profile.release]
-lto = true
