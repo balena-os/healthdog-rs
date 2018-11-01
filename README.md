@@ -42,6 +42,7 @@ Description=Docker Application Container Engine
 
 [Service]
 Type=simple
+SyslogIdentifier=dockerd
 ExecStart=/usr/local/bin/healthdog --healthcheck=check-docker /usr/bin/dockerd
 WatchdogSec=10
 Restart=always
