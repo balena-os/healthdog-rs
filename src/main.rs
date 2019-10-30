@@ -7,8 +7,7 @@ extern crate systemd;
 use getopts::{Options, ParsingStyle};
 use libc::pid_t;
 use nix::sys::signal::kill;
-use nix::unistd::getpid;
-use std::collections::HashMap;
+use nix::unistd::{getpid, Pid};
 use std::{env, process, thread, time};
 use systemd::daemon;
 
@@ -67,7 +66,7 @@ fn main() {
             };
 
             loop {
-                if kill(pid, None).is_err() {
+                if kill(Pid::from_raw(pid), None).is_err() {
                     println!("Parent process exited");
                     process::exit(1);
                 }
@@ -75,10 +74,9 @@ fn main() {
                 match process::Command::new(&health_cmd).status() {
                     Ok(status) => {
                         if status.success() {
-                            let mut message = HashMap::new();
-                            message.insert("WATCHDOG", "1");
+                            let message = [("WATCHDOG", "1")];
 
-                            if let Err(err) = daemon::pid_notify(pid, false, message) {
+                            if let Err(err) = daemon::pid_notify(pid, false, message.iter()) {
                                 println!("{}", err);
                                 process::exit(1);
                             };
