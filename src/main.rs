@@ -44,9 +44,10 @@ fn main() {
         None => process::exit(1),
     };
 
-    let interval = match env::var("WATCHDOG_USEC").ok().and_then(
-        |val| val.parse::<u64>().ok(),
-    ) {
+    let interval = match env::var("WATCHDOG_USEC")
+        .ok()
+        .and_then(|val| val.parse::<u64>().ok())
+    {
         Some(usec) => time::Duration::from_secs(usec / 2 / 1_000_000),
         None => {
             println!("Invalid value for WATCHDOG_USEC");
