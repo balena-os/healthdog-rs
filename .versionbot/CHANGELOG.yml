@@ -1,0 +1,25 @@
+- commits:
+    - subject: Prepare for automated versioning & releases
+      hash: 9bb96db6baa838daaf6674e94fdfbdecb07aa308
+      body: ''
+      footer:
+        Change-type: major
+        change-type: major
+        Changelog-entry: Prepare for automated versioning & releases
+        changelog-entry: Prepare for automated versioning & releases
+        Signed-off-by: Will Boyce <will@balena.io>
+        signed-off-by: Will Boyce <will@balena.io>
+      author: Will Boyce
+    - subject: Update dependencies
+      hash: 4413ff33411e463aceb534e96d36184c73ae3d4a
+      body: |
+        Code is updated as well to fix compilation errors after bumping
+        the dependencies.
+      footer:
+        Change-type: patch
+        change-type: patch
+        Signed-off-by: Zahari Petkov <zahari@balena.io>
+        signed-off-by: Zahari Petkov <zahari@balena.io>
+      author: Zahari Petkov
+  version: 1.0.0
+  date: 2019-11-04T18:09:57.945Z
