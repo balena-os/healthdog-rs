@@ -1,4 +1,31 @@
 - commits:
+    - subject: Fix for --pid parsing
+      hash: 2f5458fa5c76cda83de690b2e4ef53e141f83427
+      body: |
+        optflagopt results in the argument for --pid as optional.
+        We actually consider the arguement for --pid as required
+
+        Combined with ParsingStyle::StopAtFirstFree, we get an interesting
+        situation.
+
+        When healthdog spawns the helper with --pid PID, PID is considered
+        to be another argument and not part of --pid somehow.
+
+        As a result healthdog tries to respawn a new process called PID.
+
+        Fixed by making the arguement for --pid as optopt to make the argument
+        as required.
+      footer:
+        Change-type: patch
+        change-type: patch
+        Changelog-entry: Fix for --pid parsing
+        changelog-entry: Fix for --pid parsing
+        Signed-off-by: Zubair Lutfullah Kakakhel <zubair@balena.io>
+        signed-off-by: Zubair Lutfullah Kakakhel <zubair@balena.io>
+      author: Zubair Lutfullah Kakakhel
+  version: 1.0.1
+  date: 2020-01-14T13:23:22.190Z
+- commits:
     - subject: Prepare for automated versioning & releases
       hash: 9bb96db6baa838daaf6674e94fdfbdecb07aa308
       body: ''
