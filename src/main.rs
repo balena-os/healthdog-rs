@@ -21,7 +21,7 @@ fn main() {
     let mut opts = Options::new();
 
     opts.parsing_style(ParsingStyle::StopAtFirstFree)
-        .optflagopt("p", "pid", "pid to send watchdog events for", "PID")
+        .optopt("p", "pid", "pid to send watchdog events for", "PID")
         .reqopt("c", "healthcheck", "Set healthcheck command", "COMMAND")
         .optflag("h", "help", "Print this help menu");
 
