@@ -1,4 +1,17 @@
 - commits:
+    - subject: Delete CODEOWNERS
+      hash: 250dc7603e5dba5e6048237eb2dcfaa94aac5818
+      body: ''
+      footer:
+        Change-type: patch
+        change-type: patch
+        Signed-off-by: Kyle Harding <kyle@balena.io>
+        signed-off-by: Kyle Harding <kyle@balena.io>
+      author: Kyle Harding
+      nested: []
+  version: 1.0.2
+  date: 2021-06-30T17:39:10.323Z
+- commits:
     - subject: Fix for --pid parsing
       hash: 2f5458fa5c76cda83de690b2e4ef53e141f83427
       body: |

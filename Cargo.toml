@@ -1,6 +1,6 @@
 [package]
 name = "healthdog"
-version = "1.0.1"
+version = "1.0.2"
 authors = ["Petros Angelatos <petrosagg@gmail.com>"]
 description = "Helper program that connects external periodic heathchecks with systemd's watchdog support"
 repository = "https://github.com/resin-os/healthdog-rs.git"
