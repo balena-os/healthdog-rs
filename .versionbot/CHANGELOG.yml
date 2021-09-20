@@ -1,4 +1,17 @@
 - commits:
+    - subject: Update readme to reflect actual delay behaviour with examples
+      hash: 0dc9e7fcc78914fd1e1b39e13442099616711051
+      body: ''
+      footer:
+        Change-type: patch
+        change-type: patch
+        Signed-off-by: Kyle Harding <kyle@balena.io>
+        signed-off-by: Kyle Harding <kyle@balena.io>
+      author: Kyle Harding
+      nested: []
+  version: 1.0.3
+  date: 2021-09-20T19:44:46.418Z
+- commits:
     - subject: Delete CODEOWNERS
       hash: 250dc7603e5dba5e6048237eb2dcfaa94aac5818
       body: ''
