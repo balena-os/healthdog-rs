@@ -50,6 +50,12 @@ Restart=always
 WantedBy=multi-user.target
 ```
 
-The service will spawn healthdog which in turn will run `check-docker` every 5
-seconds (half the systemd duration) and pet the watchdog if it successfully
+The service will spawn healthdog which in turn will run `check-docker` with a delay
+of 5 seconds (half the systemd duration) between each run and pet the watchdog if it successfully
 returns.
+
+Note that the delay is initiated after the previous run has completed, not at set intervals.
+This is to avoid parallel runs of the healthcheck if the command takes longer than expected.
+
+For example, if the provided healthcheck command takes 60s and the systemd watchdog timeout is 90s,
+it will never be successful as each run will take 45s delay + 60s runtime.
