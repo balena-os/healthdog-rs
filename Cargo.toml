@@ -13,3 +13,8 @@ getopts = "0.2"
 exec = "0.3"
 nix = "0.15"
 
+[profile.release]
+opt-level = "z"
+lto = true
+panic = "abort"
+codegen-units = 1
