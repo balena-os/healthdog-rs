@@ -1,7 +1,21 @@
 - commits:
+    - subject: Optimize binary size in release builds
+      hash: e8907e4b13f3d8e3fe2d2225e591067547482ef5
+      body: ""
+      footer:
+        Change-type: patch
+        change-type: patch
+        Signed-off-by: Zahari Petkov <zahari@balena.io>
+        signed-off-by: Zahari Petkov <zahari@balena.io>
+      author: Zahari Petkov
+      nested: []
+  version: 1.0.4
+  title: "'Optimize binary size in release builds'"
+  date: 2022-06-13T09:32:51.101Z
+- commits:
     - subject: Update readme to reflect actual delay behaviour with examples
       hash: 0dc9e7fcc78914fd1e1b39e13442099616711051
-      body: ''
+      body: ""
       footer:
         Change-type: patch
         change-type: patch
@@ -14,7 +28,7 @@
 - commits:
     - subject: Delete CODEOWNERS
       hash: 250dc7603e5dba5e6048237eb2dcfaa94aac5818
-      body: ''
+      body: ""
       footer:
         Change-type: patch
         change-type: patch
@@ -54,7 +68,7 @@
 - commits:
     - subject: Prepare for automated versioning & releases
       hash: 9bb96db6baa838daaf6674e94fdfbdecb07aa308
-      body: ''
+      body: ""
       footer:
         Change-type: major
         change-type: major
