@@ -44,19 +44,18 @@ fn main() {
         None => process::exit(1),
     };
 
-    let interval = match env::var("WATCHDOG_USEC")
-        .ok()
-        .and_then(|val| val.parse::<u64>().ok())
-    {
-        Some(usec) => time::Duration::from_secs(usec / 2 / 1_000_000),
-        None => {
-            println!("Invalid value for WATCHDOG_USEC");
-            process::exit(1);
-        }
-    };
+    let interval = watchdog_interval_or_exit();
 
     match matches.opt_str("pid") {
         Some(pid) => {
+            let interval = match interval {
+                None => {
+                    println!("Exiting, will not pet the watchdog");
+                    process::exit(0);
+                }
+                Some(value) => value,
+            };
+
             let pid = match pid.parse::<pid_t>() {
                 Ok(pid) => pid,
                 Err(err) => {
@@ -118,6 +117,29 @@ fn main() {
                     println!("Error: {}", err);
                     process::exit(1);
                 }
+            }
+        }
+    }
+}
+
+/// Returns the watchdog interval duration, or `exit`s in case of error. Returns
+/// `Option::None` when we are not supposed to pet the watchdog.
+fn watchdog_interval_or_exit() -> Option<time::Duration> {
+    match env::var("WATCHDOG_USEC") {
+        Ok(val) => match val.parse::<u64>().ok() {
+            Some(usec) => Some(time::Duration::from_micros(usec / 2)),
+            None => {
+                println!("Invalid value for WATCHDOG_USEC: {}", val);
+                process::exit(1);
+            }
+        },
+        Err(err) => {
+            if err == env::VarError::NotPresent {
+                println!("WATCHDOG_USEC not set");
+                Option::None
+            } else {
+                println!("Error reading WATCHDOG_USEC: {}", err);
+                process::exit(1);
             }
         }
     }
