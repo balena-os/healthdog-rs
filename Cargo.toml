@@ -16,5 +16,4 @@ nix = "0.15"
 [profile.release]
 opt-level = "z"
 lto = true
-panic = "abort"
 codegen-units = 1
