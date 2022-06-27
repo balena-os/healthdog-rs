@@ -1,9 +1,11 @@
+extern crate anyhow;
 extern crate exec;
 extern crate getopts;
 extern crate libc;
 extern crate nix;
 extern crate systemd;
 
+use anyhow::{bail, Result};
 use getopts::{Options, ParsingStyle};
 use libc::pid_t;
 use nix::sys::signal::kill;
@@ -15,7 +17,7 @@ fn print_usage(opts: &Options) {
     println!("{}", opts.usage(&opts.short_usage("healthdog")));
 }
 
-fn main() {
+fn main() -> Result<()> {
     let args: Vec<String> = env::args().skip(1).collect();
 
     let mut opts = Options::new();
@@ -28,30 +30,26 @@ fn main() {
     let matches = match opts.parse(&args) {
         Ok(m) => m,
         Err(err) => {
-            println!("{}\n", err);
             print_usage(&opts);
-            return;
+            bail!(err)
         }
     };
 
     if matches.opt_present("h") {
         print_usage(&opts);
-        return;
+        return Ok(());
     }
 
-    let health_cmd = match matches.opt_str("healthcheck") {
-        Some(s) => s,
-        None => process::exit(1),
-    };
+    let health_cmd = matches.opt_str("healthcheck").unwrap();
 
-    let interval = watchdog_interval_or_exit();
+    let interval = watchdog_interval()?;
 
     match matches.opt_str("pid") {
         Some(pid) => {
             let interval = match interval {
                 None => {
                     println!("Exiting, will not pet the watchdog");
-                    process::exit(0);
+                    return Ok(());
                 }
                 Some(value) => value,
             };
@@ -59,33 +57,22 @@ fn main() {
             let pid = match pid.parse::<pid_t>() {
                 Ok(pid) => pid,
                 Err(err) => {
-                    println!("{}\n", err);
                     print_usage(&opts);
-                    return;
+                    bail!(err)
                 }
             };
 
             loop {
                 if kill(Pid::from_raw(pid), None).is_err() {
                     println!("Parent process exited");
-                    process::exit(1);
+                    return Ok(());
                 }
 
-                match process::Command::new(&health_cmd).status() {
-                    Ok(status) => {
-                        if status.success() {
-                            let message = [("WATCHDOG", "1")];
+                let status = process::Command::new(&health_cmd).status()?;
 
-                            if let Err(err) = daemon::pid_notify(pid, false, message.iter()) {
-                                println!("{}", err);
-                                process::exit(1);
-                            };
-                        }
-                    }
-                    Err(err) => {
-                        println!("{}", err);
-                        process::exit(1);
-                    }
+                if status.success() {
+                    let message = [("WATCHDOG", "1")];
+                    daemon::pid_notify(pid, false, message.iter())?;
                 }
 
                 thread::sleep(interval);
@@ -94,52 +81,39 @@ fn main() {
         None => {
             let pid = getpid();
 
-            // first we start the helper child process that will run the healthcheck
-            let helper = process::Command::new("/proc/self/exe")
+            // first we start the helper child process that will run the
+            // healthcheck
+            let mut helper = process::Command::new("/proc/self/exe")
                 .args(&["--healthcheck", &health_cmd])
                 .args(&["--pid", pid.to_string().as_str()])
-                .spawn();
+                .spawn()?;
 
-            match helper {
-                Ok(mut helper) => {
-                    // Then we execve to the requested program
-                    let err = exec::Command::new(&matches.free[0])
-                        .args(&matches.free[1..])
-                        .exec();
+            // Then we execve to the requested program
+            let err = exec::Command::new(&matches.free[0])
+                .args(&matches.free[1..])
+                .exec();
 
-                    // We only reach this point if execve failed
-                    println!("Error: {}", err);
+            helper.kill().unwrap_or(());
 
-                    helper.kill().unwrap_or(());
-                    process::exit(1);
-                }
-                Err(err) => {
-                    println!("Error: {}", err);
-                    process::exit(1);
-                }
-            }
+            bail!(err)
         }
     }
 }
 
-/// Returns the watchdog interval duration, or `exit`s in case of error. Returns
-/// `Option::None` when we are not supposed to pet the watchdog.
-fn watchdog_interval_or_exit() -> Option<time::Duration> {
+/// Returns the watchdog interval duration. Returns `Option::None` when we are
+/// not supposed to pet the watchdog.
+fn watchdog_interval() -> Result<Option<time::Duration>> {
     match env::var("WATCHDOG_USEC") {
         Ok(val) => match val.parse::<u64>().ok() {
-            Some(usec) => Some(time::Duration::from_micros(usec / 2)),
-            None => {
-                println!("Invalid value for WATCHDOG_USEC: {}", val);
-                process::exit(1);
-            }
+            Some(usec) => Ok(Some(time::Duration::from_micros(usec / 2))),
+            None => bail!("Invalid value for WATCHDOG_USEC: {}", val),
         },
         Err(err) => {
             if err == env::VarError::NotPresent {
                 println!("WATCHDOG_USEC not set");
-                Option::None
+                Ok(Option::None)
             } else {
-                println!("Error reading WATCHDOG_USEC: {}", err);
-                process::exit(1);
+                bail!("Error reading WATCHDOG_USEC: {}", err);
             }
         }
     }
