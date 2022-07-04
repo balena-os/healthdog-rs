@@ -5,7 +5,7 @@ extern crate libc;
 extern crate nix;
 extern crate systemd;
 
-use anyhow::{bail, Result};
+use anyhow::{anyhow, bail, Result};
 use getopts::{Options, ParsingStyle};
 use libc::pid_t;
 use nix::sys::signal::kill;
@@ -26,7 +26,7 @@ fn main() -> Result<()> {
 
     opts.parsing_style(ParsingStyle::StopAtFirstFree)
         .optopt("p", "pid", "pid to send watchdog events for", "PID")
-        .reqopt("c", "healthcheck", "Set healthcheck command", "COMMAND")
+        .reqopt("c", "healthcheck", "Set healthcheck command", "HEALTHCHECK")
         .optflag("h", "help", "Print this help menu");
 
     let args = match populate_args(&opts) {
@@ -102,6 +102,9 @@ fn populate_args(opts: &Options) -> Result<Args> {
     let help = matches.opt_present("h");
 
     let free = matches.free;
+    if free.is_empty() {
+        return Err(anyhow!("Required command missing"));
+    }
 
     let interval = get_watchdog_interval()?;
 
@@ -115,7 +118,8 @@ fn populate_args(opts: &Options) -> Result<Args> {
 }
 
 fn print_usage(opts: &Options) {
-    println!("{}", opts.usage(&opts.short_usage("healthdog")));
+    let brief = "Usage: healthdog [options] -c HEALTHCHECK COMMAND [ARGS-TO-COMMAND...]";
+    println!("{}", opts.usage(&brief));
 }
 
 /// Returns the watchdog interval duration. Returns `Option::None` when we are
