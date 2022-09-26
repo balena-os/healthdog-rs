@@ -1,4 +1,38 @@
 - commits:
+    - subject: Use anyhow for error handling
+      hash: 5191ce897d60dd8780198a6378e1a222f6887780
+      body: |
+        This eliminates the need for manually exiting the process and
+        simplifies the code using more idiomatic approach.
+      footer:
+        Change-type: minor
+        change-type: minor
+        Signed-off-by: Zahari Petkov <zahari@balena.io>
+        signed-off-by: Zahari Petkov <zahari@balena.io>
+      author: Zahari Petkov
+      nested: []
+    - subject: Handle disabled watchdog (WATCHDOG_USEC not set)
+      hash: 91aadc714f5657b57fbc5a19743653e9738a752a
+      body: |
+        Systemd will not set the `WATCHDOG_USEC` environment variable if the
+        unit in question has the watchdog disabled by setting `WatchdogSec=0`.
+
+        Before this commit, healthdog would fail in this case, exiting before it
+        even started the process it was supposed to run and watch.
+
+        With this commit, if `WATCHDOG_USEC` is not set, healthdog will run
+        without errors, will start the desired process, and will refrain from
+        petting Systemd's watchdog.
+      footer:
+        Signed-off-by: Leandro Motta Barros <leandro@balena.io>
+        signed-off-by: Leandro Motta Barros <leandro@balena.io>
+        Change-type: minor
+        change-type: minor
+      author: Leandro Motta Barros
+      nested: []
+  version: 1.1.0
+  date: 2022-09-26T10:01:48.344Z
+- commits:
     - subject: Remote LTO optimization
       hash: e7ae0a6f5187f15f8af47910225e14e4fa6808fe
       body: ""
