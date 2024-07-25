@@ -8,7 +8,7 @@ license = "Apache-2.0"
 
 [dependencies]
 libc = "0.2"
-systemd = "0.4"
+systemd = "0.10"
 getopts = "0.2"
 exec = "0.3"
 nix = "0.15"
